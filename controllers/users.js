@@ -86,11 +86,11 @@ module.exports.logout = (req, res) => res
   .clearCookie('jwt')
   .send({ message: USER_LOGOUT_SUCCESS });
 
-module.exports.updateUserName = (req, res, next) => {
-  const { name } = req.body;
+module.exports.updateUserData = (req, res, next) => {
+  const { name, email } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
-    { name },
+    { name, email },
     {
       new: true,
       runValidators: true,
@@ -103,7 +103,9 @@ module.exports.updateUserName = (req, res, next) => {
       return res.status(SUCCESS).send(user);
     })
     .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
+      if (err.code === 11000) {
+        next(new ConflictError(USER_CONFLICT_ERROR));
+      } else if (err instanceof mongoose.Error.ValidationError) {
         next(new BadRequestError(USER_UPDATE_ERROR));
       } else {
         next(err);

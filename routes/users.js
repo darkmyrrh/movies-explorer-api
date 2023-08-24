@@ -6,10 +6,10 @@ const {
 
 const {
   findUserById,
-  updateUserName,
+  updateUserData,
 } = require('../controllers/users');
 
 router.get('/me', findUserById);
-router.patch('/me', updateUserDataByIdValidation, updateUserName);
+router.patch('/me', updateUserDataByIdValidation, updateUserData);
 
 module.exports = router;
