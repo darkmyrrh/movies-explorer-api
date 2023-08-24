@@ -11,6 +11,7 @@ const { requestLogger, errorLogger } = require('./middlewares/logger');
 const routes = require('./routes');
 const errorHandler = require('./middlewares/errorHandler');
 const limiter = require('./middlewares/limiter');
+const corsHangler = require('./middlewares/corsHandler');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
+app.use(corsHangler);
 
 mongoose.connect(DB_URL, {
   useNewUrlParser: true,

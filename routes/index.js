@@ -6,6 +6,7 @@ const auth = require('../middlewares/auth');
 const { createUser, login, logout } = require('../controllers/users');
 const { loginValidaion, createUserValidation } = require('../utils/requestValidation');
 const NotFoundError = require('../errors/NotFoundError');
+const { NOT_FOUND_ERROR } = require('../utils/constants');
 
 router.get('/crash-test', () => {
   setTimeout(() => {
@@ -20,7 +21,7 @@ router.use('/users', auth, userRoutes);
 router.use('/movies', auth, moviesRoutes);
 
 router.use('*', (req, res, next) => {
-  next(new NotFoundError('Запрашиваемая страница не найдена'));
+  next(new NotFoundError(NOT_FOUND_ERROR));
 });
 
 module.exports = router;

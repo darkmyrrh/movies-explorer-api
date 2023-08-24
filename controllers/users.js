@@ -8,36 +8,42 @@ const ConflictError = require('../errors/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
+const {
+  USER_LOGIN_SUCCESS,
+  USER_LOGOUT_SUCCESS,
+  USER_CAST_ERROR,
+  USER_CREATE_ERROR,
+  USER_UPDATE_ERROR,
+  USER_NOT_FOUND_ERROR,
+  USER_CONFLICT_ERROR,
+} = require('../utils/constants');
+
 const User = require('../models/user');
 
 module.exports.findUserById = (req, res, next) => User.findById(req.user._id)
   .then((user) => {
     if (!user) {
-      throw new NotFoundError('Пользователь с указанным _id не найден.');
+      throw new NotFoundError(USER_NOT_FOUND_ERROR);
     }
     return res.status(SUCCESS).send(user);
   })
   .catch((err) => {
     if (err instanceof mongoose.Error.CastError) {
-      next(new BadRequestError('Передан некорректный _id пользователя.'));
+      next(new BadRequestError(USER_CAST_ERROR));
     } else {
       next(err);
     }
   });
 
 module.exports.createUser = (req, res, next) => {
-  const {
-    email,
-    password,
-    name,
-  } = req.body;
-  bcrypt.hash(password, 10)
+  const { email, password, name } = req.body;
+  bcrypt
+    .hash(password, 10)
     .then((hash) => User.create({
       email,
       password: hash,
       name,
-    }))
-    .then((newUser) => {
+    })).then((newUser) => {
       res.status(CREATED).send({
         _id: newUser._id,
         email: newUser.email,
@@ -46,9 +52,9 @@ module.exports.createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.code === 11000) {
-        next(new ConflictError('Пользователь с таким адресом электронной почты уже зарегистрирован'));
+        next(new ConflictError(USER_CONFLICT_ERROR));
       } else if (err instanceof mongoose.Error.ValidationError) {
-        next(new BadRequestError('Переданы некорректные данные при создании пользователя.'));
+        next(new BadRequestError(USER_CREATE_ERROR));
       } else {
         next(err);
       }
@@ -60,17 +66,25 @@ module.exports.login = (req, res, next) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
-      res.cookie('jwt', token, {
-        maxAge: 3600000 * 24 * 7,
-        httpOnly: true,
-      })
-        .send({ message: 'Вход успешно выполнен' });
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        { expiresIn: '7d' },
+      );
+      res
+        .cookie('jwt', token, {
+          maxAge: 3600000 * 24 * 7,
+          httpOnly: true,
+        })
+        .send({ message: USER_LOGIN_SUCCESS });
     })
     .catch(next);
 };
 
-module.exports.logout = (req, res) => res.status(SUCCESS).clearCookie('jwt').send({ message: 'Выход успешно выполнен' });
+module.exports.logout = (req, res) => res
+  .status(SUCCESS)
+  .clearCookie('jwt')
+  .send({ message: USER_LOGOUT_SUCCESS });
 
 module.exports.updateUserName = (req, res, next) => {
   const { name } = req.body;
@@ -84,13 +98,13 @@ module.exports.updateUserName = (req, res, next) => {
   )
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь с указанным _id не найден.');
+        throw new NotFoundError(USER_NOT_FOUND_ERROR);
       }
       return res.status(SUCCESS).send(user);
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
+        next(new BadRequestError(USER_UPDATE_ERROR));
       } else {
         next(err);
       }
