@@ -85,7 +85,10 @@ module.exports.login = (req, res, next) => {
 
 module.exports.logout = (req, res) => res
   .status(SUCCESS)
-  .clearCookie('jwt')
+  .clearCookie('jwt', {
+    httpOnly: true,
+    secure: true,
+  })
   .send({ message: USER_LOGOUT_SUCCESS });
 
 module.exports.updateUserData = (req, res, next) => {
