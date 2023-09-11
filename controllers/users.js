@@ -83,13 +83,16 @@ module.exports.login = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.logout = (req, res) => res
-  .status(SUCCESS)
-  .clearCookie('jwt', {
-    httpOnly: true,
-    secure: true,
-  })
-  .send({ message: USER_LOGOUT_SUCCESS });
+module.exports.logout = (req, res, next) => {
+  res
+    .clearCookie('jwt', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    })
+    .send({ message: USER_LOGOUT_SUCCESS })
+    .catch(next);
+};
 
 module.exports.updateUserData = (req, res, next) => {
   const { name, email } = req.body;
